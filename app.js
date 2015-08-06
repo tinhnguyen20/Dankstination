@@ -12,6 +12,7 @@ var db = monk('localhost:27017/nodetest2');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var points = require('./routes/points')
 
 var app = express();
 
@@ -34,8 +35,12 @@ app.use(function(req,res,next){
     next();
 });
 
+// Establishing routes
 app.use('/', routes);
 app.use('/users', users);
+
+//app.use('/', routes);
+app.use('/points', points);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

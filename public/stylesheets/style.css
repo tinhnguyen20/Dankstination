@@ -1,50 +1,52 @@
 body {
   padding: 30px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-}
-
-h2 {
-	margin:0 0 .5em 0;
+  background: url("res/volcano.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-color: #113366;
+  text-align: center;
+  color: #F0F0F0;
 }
 
 a {
   color: #00B7FF;
 }
 
-#wrapper {
-	padding-left:312px;
-	position:relative;
-}
 
-#userList {
-	margin:0 0 30px 0;
+#userList, #locations{
+	color: black;
 }
-	#userList table {
+	#userList table, #locations table {
+
+		margin-left: auto;
+		margin-right: auto;
 		border-collapse:separate;
 		border-spacing:1px;
 		background:#CCC;
 	}
-		#userList table th {
+		#userList table th, #locations table th {
 			background:#EEE;
 			font-weight:600;
 			padding:10px 20px;
 			text-align:center;
 		}
-		#userList table tbody {
+		#userList table tbody, #locations table tbody {
 			padding:0; margin:0;
 			border-collapse:collapse;
 			border-spacing:0px;
 		}
-			#userList table td {
+			#userList table td, #locations table td {
 				background:#FFF;
 				padding:5px 10px;
 				text-align:center;
 			}
 
+
 #userInfo {
-	width:250px;
-	position:absolute;
-	top:0; left:0;
+	width: 250px;
+	margin-left: auto;
+	margin-right: auto;
 }
 	#userInfo p {
 		padding:15px;

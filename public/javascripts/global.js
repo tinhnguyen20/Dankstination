@@ -1,6 +1,8 @@
 
 // Userlist data array for filling in info box
 var userListData = [];
+var user_ids = new Set();
+var location_ids = new Set()
 
 // DOM Ready =============================================================
 $(document).ready(function() {
@@ -14,6 +16,8 @@ $(document).ready(function() {
     // Add Delete user link
     $('#userList table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
 
+    $('#locations table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
+
 
 
 });
@@ -25,6 +29,8 @@ function populateTable() {
 
     // Empty content string
     var tableContent = '';
+    var locationTable = '';
+
 
     // jQuery AJAX call for JSON
     $.getJSON( '/users/userlist', function( data ) {
@@ -40,11 +46,30 @@ function populateTable() {
             tableContent += '<td>' + this.email + '</td>';
             tableContent += '<td><a href="#" class="linkdeleteuser" rel="' + this._id + '">delete</a></td>';
             tableContent += '</tr>';
+
+            user_ids.add(this._id);
         });
 
         // Inject the whole content string into our existing HTML table
         $('#userList table tbody').html(tableContent);
     });
+
+    $.getJSON('/points/locations', function(data){
+        locationData = data;
+        $.each(data, function(){
+            locationTable += '<tr>';
+            locationTable += '<td>' + this.latitude + '</td>';
+            locationTable += '<td>' + this.longitude + '</td>';
+            // Modify delete method for locations
+            locationTable += '<td><a href="#" class="linkdeleteuser" rel="' + this._id + '">delete</a></td>';
+            locationTable += '</tr>';
+
+            location_ids.add(this._id);
+        })
+        
+        $('#locations table tbody').html(locationTable);
+        
+    })
 };
 
 // Add User
@@ -105,32 +130,51 @@ function addUser(event) {
 
 // Delete User
 function deleteUser(event) {
-
     event.preventDefault();
-
+    
     // Pop up a confirmation dialog
     var confirmation = confirm('Are you sure you want to delete this user?');
 
     // Check and make sure the user confirmed
     if (confirmation === true) {
+        // Get id and determind where to delete
+        id = $(this).attr('rel');
+        if (user_ids.has(id)){
+            $.ajax({
+                type: 'DELETE',
+                url: '/users/deleteuser/' + id
+            }).done(function( response ) {
 
-        // If they did, do our delete
-        $.ajax({
-            type: 'DELETE',
-            url: '/users/deleteuser/' + $(this).attr('rel')
-        }).done(function( response ) {
+                // Check for a successful (blank) response
+                if (response.msg === '') {
+                }
+                else {
+                    alert('Error: ' + response.msg);
+                }
 
-            // Check for a successful (blank) response
-            if (response.msg === '') {
-            }
-            else {
-                alert('Error: ' + response.msg);
-            }
+                // Update the table
+                populateTable();
+                user_ids.delete(id);
 
-            // Update the table
-            populateTable();
+            });
+        } else if (location_ids.has(id)){
+            $.ajax({
+                type: 'DELETE',
+                url: '/points/deletelocation/' + id
+            }).done(function( response ) {
 
-        });
+                // Check for a successful (blank) response
+                if (response.msg === '') {
+                }
+                else {
+                    alert('Error: ' + response.msg);
+                }
+
+                // Update the table
+                populateTable();
+                location_ids.delete(id);
+            });
+        }
 
     }
     else {
