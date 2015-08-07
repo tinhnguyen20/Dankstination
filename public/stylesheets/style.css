@@ -1,11 +1,12 @@
 body {
   padding: 30px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-  background: url("res/volcano.jpg");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-color: #113366;
   text-align: center;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  background: url("res/background.jpg");
+  background-repeat: no-repeat;
+  background-size: auto;
+  background-color: #113366;
+  background-position: 0% 30%;
   color: #F0F0F0;
 }
 

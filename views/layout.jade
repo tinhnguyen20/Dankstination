@@ -3,7 +3,9 @@ doctype html
 html
     head
         title= title
+        block map_imports
         link(rel='stylesheet', href='/stylesheets/style.css')
+        link(rel='stylesheet', href='/stylesheets/map.css')
     body
         block content
         script(src='http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js')

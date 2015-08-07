@@ -1,4 +1,11 @@
 extends layout
 
-block content
-	
+block content 
+	h2 Your Dankstinations
+	#map-canvas
+
+
+block map_imports
+	style(type='text/css').
+		html, body, #map-canvas { height: 100%; margin: 0; padding: 0;}
+	script(type='text/javascript', src='https://maps.googleapis.com/maps/api/js?key=AIzaSyDZS8ojZJFOWsxMWA6auhxXx2n3XmUX_eM')

@@ -6,13 +6,18 @@ var location_ids = new Set()
 
 // DOM Ready =============================================================
 $(document).ready(function() {
-
+    console.log(document);
     // Populate the user table on initial page load
     populateTable();
+
+    // Map
+    initialize();
     // Username link click
     $('#userList table tbody').on('click', 'td a.linkshowuser', showUserInfo);
     // Add User button click
     $('#btnAddUser').on('click', addUser);
+
+    $('#btnMap').on('click', switchToMap);
     // Add Delete user link
     $('#userList table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
 
@@ -175,7 +180,6 @@ function deleteUser(event) {
                 location_ids.delete(id);
             });
         }
-
     }
     else {
 
@@ -208,3 +212,29 @@ function showUserInfo(event) {
     $('#userInfoLocation').text(thisUserObject.location);
 
 };
+
+// ====================== Map Stuff ================================================ 
+
+function initialize(){
+    var mapOptions = {
+    zoom: 8,
+    center: new google.maps.LatLng(-34.397, 150.644)
+    };
+
+    var map = new google.maps.Map(document.getElementById('map-canvas'),
+        mapOptions);
+
+    // Adding listeners
+    google.maps.event.addListener(map, 'dblclick', function(event){
+        console.log(event);
+        placeMarker(event.latLng, map);
+    });
+}
+
+function placeMarker(position, map) {
+    console.log("Added marker");
+        var marker = new google.maps.Marker({
+            position: position,
+            map: map
+        });
+}
