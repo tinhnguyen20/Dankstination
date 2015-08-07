@@ -11,19 +11,19 @@ $(document).ready(function() {
     populateTable();
 
     // Map
-    initialize();
+    
+    console.log("YO");
     // Username link click
     $('#userList table tbody').on('click', 'td a.linkshowuser', showUserInfo);
     // Add User button click
     $('#btnAddUser').on('click', addUser);
 
-    $('#btnMap').on('click', switchToMap);
     // Add Delete user link
     $('#userList table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
 
     $('#locations table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
 
-
+    initialize();
 
 });
 
@@ -99,7 +99,7 @@ function addUser(event) {
             'location': $('#addUser fieldset input#inputUserLocation').val(),
             'gender': $('#addUser fieldset input#inputUserGender').val()
         }
-
+        console.log(newUser);
         // Use AJAX to post the object to our adduser service
         $.ajax({
             type: 'POST',
@@ -125,6 +125,8 @@ function addUser(event) {
 
             }
         });
+
+        console.log("Added a user");
     }
     else {
         // If errorCount is more than 0, error out
