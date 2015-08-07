@@ -23,8 +23,9 @@ $(document).ready(function() {
 
     $('#locations table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
 
+    
+    // initializing Map info
     initialize();
-
 });
 
 // Functions =============================================================
@@ -99,7 +100,6 @@ function addUser(event) {
             'location': $('#addUser fieldset input#inputUserLocation').val(),
             'gender': $('#addUser fieldset input#inputUserGender').val()
         }
-        console.log(newUser);
         // Use AJAX to post the object to our adduser service
         $.ajax({
             type: 'POST',
@@ -135,12 +135,12 @@ function addUser(event) {
     }
 };
 
-// Delete User
+// Delete User or Location
 function deleteUser(event) {
     event.preventDefault();
     
     // Pop up a confirmation dialog
-    var confirmation = confirm('Are you sure you want to delete this user?');
+    var confirmation = confirm('Are you sure you want to delete this?');
 
     // Check and make sure the user confirmed
     if (confirmation === true) {
@@ -225,18 +225,64 @@ function initialize(){
 
     var map = new google.maps.Map(document.getElementById('map-canvas'),
         mapOptions);
+    // Add all markers in database
+    displayMarkers(map);
 
     // Adding listeners
     google.maps.event.addListener(map, 'dblclick', function(event){
         console.log(event);
-        placeMarker(event.latLng, map);
+        var confirmation = confirm("Do you want to save this location?");
+        if (confirmation){
+            placeMarker(event.latLng, map);
+            coords = {"latitude": position.G, "longitude": position.K}
+            addLocation(coords);
+        }
     });
+
 }
 
 function placeMarker(position, map) {
-    console.log("Added marker");
-        var marker = new google.maps.Marker({
-            position: position,
-            map: map
+    
+    var marker = new google.maps.Marker({
+    position: position,
+    map: map
+});
+    // add to database
+
+}
+
+// Add to location database POST
+function addLocation(coords){
+    newLocation = {
+        'latitude':coords.latitude.toFixed(2),
+        'longitude': coords.longitude.toFixed(2)
+    }
+    $.ajax({
+            type: 'POST',
+            data: newLocation,
+            url: '/points/addlocation',
+            dataType: 'JSON'
+        }).done(function( response ) {
+
+            // Check for successful (blank) response
+            if (response.msg === '') {
+                // Update the table
+                populateTable();
+            }
+            else {
+                // If something goes wrong, alert the error message that our service returned
+                alert('Error: ' + response.msg);
+            }
         });
+}
+
+function displayMarkers(map){
+    $.getJSON('/points/locations', function(data){
+        console.log(data);
+        $.each(data, function(){
+            placeMarker(new google.maps.LatLng(this.latitude, this.longitude), map);
+        })
+        
+    })
+
 }

@@ -13,6 +13,18 @@ router.get('/locations', function(req, res) {
     });
 });
 
+/*
+ * POST to location.
+ */
+router.post('/addlocation', function(req, res) {
+    var db = req.db;
+    var collection = db.get('locations');
+    collection.insert(req.body, function(err, result){
+        res.send(
+            (err === null) ? { msg: '' } : { msg: err }
+        );
+    });
+});
 
 /*
  * DELETE to deleteLocation.
