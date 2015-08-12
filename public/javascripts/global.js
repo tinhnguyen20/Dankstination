@@ -1,8 +1,12 @@
 
 // Userlist data array for filling in info box
 var userListData = [];
+
+// MUST IMPLEMENT
+// these sets and arrays should be serverside. 
 var user_ids = new Set();
-var location_ids = new Set()
+var locations = {}; 
+var markers = []; // list of key value pairs
 
 // DOM Ready =============================================================
 $(document).ready(function() {
@@ -12,20 +16,24 @@ $(document).ready(function() {
 
     // Map
     
-    console.log("YO");
     // Username link click
     $('#userList table tbody').on('click', 'td a.linkshowuser', showUserInfo);
     // Add User button click
     $('#btnAddUser').on('click', addUser);
 
+    $('#displayAllMarkers').on('click', displayAllMarkers);
+    $('#hideAllMarkers').on('click', hideAllMarkers);
+    $('#getMyLocation').on('click', getMyLocation);
     // Add Delete user link
-    $('#userList table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
+    $('#userList table tbody').on('click', 'td a.linkdelete', deleteEntry);
 
-    $('#locations table tbody').on('click', 'td a.linkdeleteuser', deleteUser);
+    $('#locations table tbody').on('click', 'td a.linkdelete', deleteEntry);
 
     
     // initializing Map info
     initialize();
+    syncLocations();
+    console.log(markers);
 });
 
 // Functions =============================================================
@@ -50,7 +58,7 @@ function populateTable() {
             tableContent += '<tr>';
             tableContent += '<td><a href="#" class="linkshowuser" rel="' + this.username + '">' + this.username + '</a></td>';
             tableContent += '<td>' + this.email + '</td>';
-            tableContent += '<td><a href="#" class="linkdeleteuser" rel="' + this._id + '">delete</a></td>';
+            tableContent += '<td><a href="#" class="linkdelete" rel="' + this._id + '">delete</a></td>';
             tableContent += '</tr>';
 
             user_ids.add(this._id);
@@ -67,16 +75,20 @@ function populateTable() {
             locationTable += '<td>' + this.latitude + '</td>';
             locationTable += '<td>' + this.longitude + '</td>';
             // Modify delete method for locations
-            locationTable += '<td><a href="#" class="linkdeleteuser" rel="' + this._id + '">delete</a></td>';
+            locationTable += '<td><a href="#" class="linkdelete" rel="' + this._id + '">delete</a></td>';
             locationTable += '</tr>';
 
-            location_ids.add(this._id);
+            // Populating locations {id: {lat, long, marker}}
+            locations[this._id] = {latitude: this.latitude, longitude: this.longitude};
+
+
         })
         
         $('#locations table tbody').html(locationTable);
         
     })
 };
+
 
 // Add User
 function addUser(event) {
@@ -116,16 +128,13 @@ function addUser(event) {
 
                 // Update the table
                 populateTable();
-
             }
             else {
 
                 // If something goes wrong, alert the error message that our service returned
                 alert('Error: ' + response.msg);
-
             }
         });
-
         console.log("Added a user");
     }
     else {
@@ -136,7 +145,7 @@ function addUser(event) {
 };
 
 // Delete User or Location
-function deleteUser(event) {
+function deleteEntry(event) {
     event.preventDefault();
     
     // Pop up a confirmation dialog
@@ -164,7 +173,7 @@ function deleteUser(event) {
                 user_ids.delete(id);
 
             });
-        } else if (location_ids.has(id)){
+        } else if (id in locations){
             $.ajax({
                 type: 'DELETE',
                 url: '/points/deletelocation/' + id
@@ -179,8 +188,10 @@ function deleteUser(event) {
 
                 // Update the table
                 populateTable();
-                location_ids.delete(id);
+                delete locations[id];
             });
+            // Remove marker from map
+
         }
     }
     else {
@@ -217,46 +228,48 @@ function showUserInfo(event) {
 
 // ====================== Map Stuff ================================================ 
 
+var map;
+
 function initialize(){
     var mapOptions = {
-    zoom: 8,
+    zoom: 11,
     center: new google.maps.LatLng(-34.397, 150.644)
     };
 
-    var map = new google.maps.Map(document.getElementById('map-canvas'),
+    map = new google.maps.Map(document.getElementById('map-canvas'),
         mapOptions);
-    // Add all markers in database
-    displayMarkers(map);
 
     // Adding listeners
     google.maps.event.addListener(map, 'dblclick', function(event){
         console.log(event);
         var confirmation = confirm("Do you want to save this location?");
         if (confirmation){
-            placeMarker(event.latLng, map);
-            coords = {"latitude": position.G, "longitude": position.K}
-            addLocation(coords);
+            addLocation(event.latLng, map);
         }
     });
 
 }
 
-function placeMarker(position, map) {
-    
-    var marker = new google.maps.Marker({
-    position: position,
-    map: map
-});
-    // add to database
-
-}
-
 // Add to location database POST
-function addLocation(coords){
+function addLocation(position, map){
+    // make a marker
+    var marker = new google.maps.Marker({
+        position: position,
+        map: map
+    });
+    console.log(position);
+    // TODO: Fix marker!!!
+    // App crashes if google.maps.marker -> Mongodb
+
     newLocation = {
-        'latitude':coords.latitude.toFixed(2),
-        'longitude': coords.longitude.toFixed(2)
+        'latitude': parseFloat(position.G).toFixed(4),
+        'longitude': parseFloat(position.K).toFixed(4)
     }
+
+    markers.push(
+        {'location': newLocation,
+         'marker': marker});
+
     $.ajax({
             type: 'POST',
             data: newLocation,
@@ -267,6 +280,7 @@ function addLocation(coords){
             // Check for successful (blank) response
             if (response.msg === '') {
                 // Update the table
+                console.log('populating table');
                 populateTable();
             }
             else {
@@ -274,15 +288,70 @@ function addLocation(coords){
                 alert('Error: ' + response.msg);
             }
         });
+
 }
 
-function displayMarkers(map){
+function displayAllMarkers(){
+    setAllMap(map);
+    console.log(markers)
+
+    
+}
+
+function hideAllMarkers(){
+    setAllMap(null);
+}
+
+function setAllMap(map){
+    console.log(markers[0]);
+    for (i = 0; i < markers.length; i++){
+        markers[i].marker.setMap(map);
+    }
+}
+
+// Only runs on loading webpage 
+// !!!
+function syncLocations(){
     $.getJSON('/points/locations', function(data){
-        console.log(data);
+        locationData = data;
         $.each(data, function(){
-            placeMarker(new google.maps.LatLng(this.latitude, this.longitude), map);
+            newLocation = new google.maps.LatLng(parseFloat(this.latitude).toFixed(4), parseFloat(this.longitude).toFixed(4));
+
+            var marker = new google.maps.Marker({
+                position: newLocation,
+                map: map
+            });
+            markers.push({
+                'location': newLocation,
+                'marker': marker
+            });
+
         })
-        
     })
+    console.log(markers);
+}
+
+// More accurate on mobile devices with GPS system
+// Not accurate on laptops and desktops
+function getMyLocation(){
+    if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(
+            goToPos, 
+            gotError,
+            {enableHighAccuracy: true});
+    } else{
+        alert("Not supported");
+    }
+}
+
+function gotError(err){
+    alert('Error: Could not get geolocation');
+}
+
+function goToPos(position) {
+    var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+    map.setZoom(15);
+    map.panTo(latLng);
+    console.log(position);
 
 }

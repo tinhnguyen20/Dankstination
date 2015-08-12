@@ -19,6 +19,7 @@ router.get('/locations', function(req, res) {
 router.post('/addlocation', function(req, res) {
     var db = req.db;
     var collection = db.get('locations');
+    console.log("added Location");
     collection.insert(req.body, function(err, result){
         res.send(
             (err === null) ? { msg: '' } : { msg: err }
